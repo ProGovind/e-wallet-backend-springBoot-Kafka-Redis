@@ -25,6 +25,7 @@
         <module>user-service</module>
         <module>wallet-service</module>
         <module>utils</module>
+        <module>transaction-service</module>
     </modules>
     <scm>
 		<connection/>
