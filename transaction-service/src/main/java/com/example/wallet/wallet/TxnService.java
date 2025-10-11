@@ -3,10 +3,12 @@ package com.example.wallet.wallet;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
@@ -83,6 +86,65 @@ public class TxnService implements UserDetailsService {
 
         );
     }
+
+@KafkaListener(topics = CommonConstants.WALLET_UPDATE_TOPIC , groupId = "grp123")
+public void updateTxn(String msg) throws ParseException , JsonProcessingException
+{
+
+    JSONObject data=null;
+
+    try {
+        data = (JSONObject) new JSONParser().parse(msg);
+    } catch (org.json.simple.parser.ParseException e) {
+        throw new RuntimeException(e);
+    }
+
+    String txnId = (String) data.get("txnId");
+    String sender = (String) data.get("sender");
+    String receiver = (String) data.get("receiver");
+    double amount = (double) data.get("amount");
+
+    WalletUpdateStatus walletUpdateStatus = WalletUpdateStatus.valueOf((String) data.get("walletUpdateStatus"));
+
+    JSONObject senderObj = getUserFromUserService(sender);
+    String senderEmail = (String)senderObj.get("email");
+
+    String receiverEmail = null;
+
+    if(walletUpdateStatus == WalletUpdateStatus.SUCCESS)
+    {
+        JSONObject receiverObj = getUserFromUserService(receiver);
+        receiverEmail = (String)receiverObj.get("email");
+        txnRepository.updateTxn(txnId,TransactionStatus.SUCCESSFUL);
+    }
+
+    else
+    {
+        txnRepository.updateTxn(txnId,TransactionStatus.FAILED);
+    }
+
+    String senderMsg =  "Hi your teansaction with" + txnId + " got " + walletUpdateStatus;
+
+    JSONObject senderEmailObj = new JSONObject();
+      senderEmailObj.put("email",senderEmail);
+      senderEmailObj.put("msg",senderMsg);
+
+      kafkaTemplate.send(CommonConstants.TRANSACTION_COMPLETED_Topic,objectMapper.writeValueAsString(senderEmailObj));
+
+      if(walletUpdateStatus == WalletUpdateStatus.SUCCESS)
+      {
+          String receiverMsg = "Hi, you have received Rs." + amount + " from "
+                  + sender + " in your wallet linked with phone number " + receiver;
+
+          JSONObject receiverEmailObj = new JSONObject();
+          receiverEmailObj.put("email",receiverEmail);
+          receiverEmailObj.put("msg",receiverMsg);
+
+
+          kafkaTemplate.send(CommonConstants.TRANSACTION_COMPLETED_Topic,objectMapper.writeValueAsString(receiverEmailObj));
+
+      }
+}
 
     private JSONObject getUserFromUserService(String username)
     {

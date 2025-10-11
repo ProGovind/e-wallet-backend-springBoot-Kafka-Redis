@@ -6,28 +6,19 @@
         <artifactId>wallet</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>transaction-service</artifactId>
-    <name>Archetype - transaction-service</name>
+    <artifactId>notification-server</artifactId>
+    <name>Archetype - notification-server</name>
     <url>http://maven.apache.org</url>
-
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.example.wallet</groupId>
             <artifactId>utils</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
     </dependencies>
 </project>

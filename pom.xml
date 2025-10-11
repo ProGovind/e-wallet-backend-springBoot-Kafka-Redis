@@ -26,6 +26,7 @@
         <module>wallet-service</module>
         <module>utils</module>
         <module>transaction-service</module>
+        <module>notification-server</module>
     </modules>
     <scm>
 		<connection/>
